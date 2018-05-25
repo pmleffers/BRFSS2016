@@ -1,0 +1,481 @@
+LIBNAME location 'C:\Me\Desktop\BRFSS DATA\data\2016\';
+
+data location.BRFSS2016; 
+set location.sasdata;
+*Sleeptime (Outcome of Interest) coding inadequate sleep == 1 else 0;
+*This is coded this way because we are interested in those with sleep where: ln((Inadequate sleep) / (1-(Inadequate Sleep)));
+sleeptime=0;
+if (0<=SLEPTIM1 & SLEPTIM1<=6) then sleeptime=1;
+
+*Setting up Dichotomous variables;
+physact=_TOTINDA;
+if _TOTINDA=9 | _TOTINDA=77 | _TOTINDA=99 then physact=9;
+
+Child2More=.;
+if _CHLDCNT=1 then Child2More=1;
+if (_CHLDCNT>1 & _CHLDCNT<8) then Child2More=2;
+if _CHLDCNT>8 then Child2More=9;
+
+SixtyFiveMore=.;
+if (0<_AGEG5YR & _AGEG5YR<10) then SixtyFiveMore=0;
+if (9<_AGEG5YR & AGEG5YR<14) then SixtyFiveMore=1;
+if _AGEG5YR>=14 | _AGEG5YR=. then SixtyFiveMore=9;
+
+BinMentHlth=.;
+if _MENT14D=1 then BinMentHlth=0; *zero days;
+if (_MENT14D>1 & _MENT14D<9) then BinMentHlth=1;
+if _MENT14D=9 then BinMentHlth=9;
+
+BingeDrnk=9;
+if _RFBING5=1 then BingeDrnk=0;
+if _RFBING5=2 then BingeDrnk=1;
+if (_RFBING5=7 | _RFBING5=9 | _RFBING5=.) then BingeDrnk=9;
+
+TobSmoke=.;
+if _RFSMOK3=1 then TobSmoke=0;
+if _RFSMOK3=2 then TobSmoke=1;
+if _RFSMOK3=9 then TobSmoke=9;
+
+BMIWeightCats=.;
+if _BMI5CAT<3 then BMIWeightCats=0;
+if _BMI5CAT>2 then BMIWeightCats=1;
+if _BMI5CAT in (9,.) then BMIWeightCats=9;
+
+COPDCats=.;
+If CHCCOPD1=1 then COPDCats=0;
+If CHCCOPD1=2 then COPDCats=1;
+*Respondent reports having been told they have COPD. The numerator for prevalence.;
+If CHCCOPD1 in (7,9,.) then COPDCats=9;
+
+*stroke;
+StrokeCats=.;
+If CVDSTRK3=1 then StrokeCats=1;
+*Respondent reports having been told they have COPD. The numerator for prevalence.;
+If CVDSTRK3=2 then StrokeCats=0;
+If CVDSTRK3 in (7,9,.) then StrokeCats=9;
+
+*Diabetes;
+diabCats=.;
+if DIABETE3<3 then diabCats=1;
+if DIABETE3>2 then diabCats=0;
+if DIABETE3 in (7,9,.) then diabCats=9;
+run;
+
+
+proc format;
+value stForm
+0 = '7 or more hrs'
+1 = 'Fewer than 7 hrs';
+value physForm
+1 = 'Had Physical Activity'
+2 = 'No Physical Activity'
+9 = 'Don’t know/Refused/Missing';
+value childForm
+1 = '1 Child'
+2 = '1+ Child'
+9 = 'Missing/Don’t know';
+value AGEform
+0 = '< 65 YRS'
+1 = '+65 YRS'
+9 = 'Refused/Missing';
+value  mentForm
+0 = '0 Days'
+1 = '1+ Days'
+9 = 'Refused/Missing';
+value  bingeForm
+0 = 'No bing drinking'
+1 = 'Yes binge drinking'
+9 = 'Don’t know';
+value  tobForm
+0 = 'No'
+1 = 'Yes'
+9 = 'Don’t know';
+value  bmiForm
+0 = 'Underweight/Normal Weight'
+1 = 'Overweight/Obese'
+9 = 'Refused/Missing';
+value copdForm
+0 = 'Has COPD'
+1 = 'Does Not Have COPD'
+9 = 'Refused/Missing';
+value  strokeForm
+0 = 'No'
+1 = 'Yes'
+9 = 'Refused/Missing';
+value diabForm
+1 = 'Has Diabetes'
+0 = 'Not Diabetes'
+9 = 'Refused/Missing';
+
+run;
+
+***************************************************************************;
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES Child2More;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES SixtyFiveMore;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES BinMentHlth;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES BingeDrnk;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES TobSmoke;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES BMIWeightCats;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES COPDCats;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES StrokeCats;
+*WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES diabCats;
+*WEIGHT _LLCPWT;
+RUN;
+***************************************************************************;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*physact / chisq measures;
+format sleeptime stForm. physact physForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*Child2More / chisq measures;
+format sleeptime stForm. Child2More childForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*SixtyFiveMore / chisq measures;
+format sleeptime stForm. SixtyFiveMore AGEform.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*BinMentHlth / chisq measures;
+format sleeptime stForm. BinMentHlth mentForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*BingeDrnk / chisq measures;
+format sleeptime stForm. BingeDrnk bingeForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*TobSmoke / chisq measures;
+format sleeptime stForm. TobSmoke tobForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*BMIWeightCats / chisq measures;
+format sleeptime stForm. BMIWeightCats bmiForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*COPDCats / chisq measures;
+format sleeptime stForm. COPDCats copdForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*StrokeCats / chisq measures;
+format sleeptime stForm. StrokeCats strokeForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+PROC FREQ data = location.BRFSS2016 ;
+TABLES sleeptime*diabCats / chisq measures;
+format sleeptime stForm. diabCats diabForm.;
+WEIGHT _LLCPWT;
+RUN;
+
+***************************************************************************;
+
+
+*This works!;
+PROC LOGISTIC data=location.BRFSS2016; *weight _LLCPWT; 
+*      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
+model sleeptime(event='1')=
+Child2More
+SixtyFiveMore
+BinMentHlth
+;
+ods output ParameterEstimates=Estimates;
+run;
+
+
+
+
+PROC SURVEYLOGISTIC data=location.BRFSS2016; weight _LLCPWT; 
+*      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
+*class physact(ref='1') Child2More(ref='9') FiftyFiveMore(ref='0') BinMentHlth(ref='0') BingeDrnk(ref='0') TobSmoke(ref='0') BMIWeightCats(ref='0') COPDCats(ref='2') StrokeCats(ref='2') diabCats(ref='0')/param=ref;
+model sleeptime(event='1')=
+Child2More
+SixtyFiveMore
+BinMentHlth
+;
+ods output ParameterEstimates=Estimates;
+run;
+
+
+
+
+
+
+
+
+
+PROC SURVEYLOGISTIC data=location.BRFSS2016; weight _LLCPWT; 
+*      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
+class physact(ref='1') Child2More(ref='1') FiftyFiveMore(ref='0') BinMentHlth(ref='0') BingeDrnk(ref='0') TobSmoke(ref='0') BMIWeightCats(ref='0') COPDCats(ref='2') StrokeCats(ref='2') diabCats(ref='0')/param=ref;
+model sleeptime(event='0')= 
+physact 
+Child2More 
+FiftyFiveMore 
+BinMentHlth 
+BingeDrnk 
+TobSmoke 
+BMIWeightCats
+COPDCats
+StrokeCats
+diabCats
+
+physact*Child2More 
+Child2More*FiftyFiveMore 
+FiftyFiveMore*BinMentHlth 
+BinMentHlth*BingeDrnk 
+BingeDrnk*TobSmoke 
+TobSmoke*BMIWeightCats 
+BMIWeightCats*COPDCats
+COPDCats*StrokeCats
+StrokeCats*diabCats
+diabCats*physact
+
+physact*Child2More*FiftyFiveMore
+physact*Child2More*FiftyFiveMore*BinMentHlth
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk*TobSmoke
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk*TobSmoke*BMIWeightCats
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk*TobSmoke*BMIWeightCats*COPDCats
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk*TobSmoke*BMIWeightCats*COPDCats*StrokeCats
+physact*Child2More*FiftyFiveMore*BinMentHlth*BingeDrnk*TobSmoke*BMIWeightCats*COPDCats*StrokeCats*diabCats 
+;
+ods output ParameterEstimates=Estimates;
+run;
+
+
+
+
+
+
+
+
+ods graphics on;
+PROC SURVEYREG data= location.BRFSS2016 ;
+class sleeptime;
+model SLEPTIM1=_AGEG5YR /solution;
+WEIGHT _LLCPWT;
+*class;
+ods output ParameterEstimates=Estimates;
+run;
+ods graphics off;
+
+*Create Plot;
+ods graphics on;
+title1 'Age Groupings by Sleep time';
+title2 'Compare Domain Statistics';
+ods graphics / antialias=on antialiasmax=486400;
+ods listing gpath="C:\Users\Caitlin\Desktop\BRFSS DATA\data\2016";
+proc sgplot data=location.BRFSS2016 ;
+*scatter x=WEIGHT2 y=_AGEG5YR;
+scatter x=_AGEG5YR y=WEIGHT2;
+run;
+ods graphics off;
+
+
+proc format;
+value ECIGform
+1 = 'Not currently using E-cigarettes'
+2 = 'Current E-cigarette user'
+9 = 'Don’t know/Refused/Missing';
+value MENTform
+1 = 'Zero days when mental health not good'
+2 = '1-13 days when mental health not good'
+3 = '14+ days when mental health not good'
+9 = 'Don’t know/Refused/Missing';
+value COPDform
+1 = 'Has COPD'
+2 = 'Does Not Have COPD';
+value DIABform
+1 = 'Has DIABETES'
+0 = 'Does Not Have DIABETES';
+value SLEEPform
+1 = '+ 6 hours sleep'
+0 = '<= 6 hours sleep'
+9 = 'Refused/Missing';
+value  BPHIGHform
+1 = 'Not diagnosed BP high'
+2 = 'Diagnosed BP high'
+9 = 'Other';
+value  BCHIGHform
+1 = 'Not diagnosed BChol high'
+2 = 'Diagnosed BChol high'
+9 = 'Other';
+value  ASTHMAform
+1 = 'Not diagnosed asthma'
+2 = 'Diagnosed Asthma'
+9 = 'Other';
+value  RACEform
+1 = 'White only, NonHispanic'
+2 = 'Black only, NonHispanic'
+3 = 'Hispanic'
+4 = 'Other race only,Non-Hispanic'
+5 = 'Multiracial, NonHispanic';
+value  BMIform
+1 = 'Underweight'
+2 = 'Normal Weight'
+3 = 'Overweight'
+4 = 'Obese';
+value  SMOKEform
+1 = 'smokes every day'
+2 = 'smokes some days'
+3 = 'Former smoker'
+4 = 'Never smoked'
+9 = 'Don’t know';
+value  ALCform
+1 = 'No bing drinking'
+2 = 'yes binge drinking'
+9 = 'Don’t know';
+value  EXCform
+1 = 'Had physical activity or exercise'
+2 = 'No physical activity '
+9 = 'Don’t know';
+
+run;
+
+
+PROC SURVEYFREQ data = location.BRFSS2016;
+*CLUSTER _PSU ;
+*STRATA _STSTR ;
+TABLES SLEPTIM1;
+WEIGHT _LLCPWT ;
+RUN;
+
+PROC SURVEYFREQ data = location.BRFSS2016;
+*CLUSTER _PSU ;
+*STRATA _STSTR ;
+TABLES sleeptime;
+FORMAT sleeptime SLEEPform.;
+WEIGHT _LLCPWT ;
+RUN;
+
+PROC SURVEYFREQ data = location.BRFSS2016;
+*CLUSTER _PSU ;
+*STRATA _STSTR ;
+TABLES _TOTINDA;
+WEIGHT _LLCPWT ;
+RUN;
+
+PROC SURVEYFREQ data = location.BRFSS2016;
+*CLUSTER _PSU ;
+*STRATA _STSTR ;
+TABLES _CHLDCNT;
+WEIGHT _LLCPWT ;
+RUN;
+
+PROC SURVEYFREQ data = location.BRFSS2016;
+*CLUSTER _PSU ;
+*STRATA _STSTR ;
+TABLES _AGEG5YR;
+WEIGHT _LLCPWT ;
+RUN;
+
+
+proc surveyfreq data = location.BRFSS2016;
+tables _MENT14D;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+proc surveyfreq data = location.BRFSS2016;
+tables _RFBING5;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+proc surveyfreq data = location.BRFSS2016;
+tables _RFSMOK3;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+proc surveyfreq data = location.BRFSS2016;
+tables _BMI5CAT;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+proc surveyfreq data = location.BRFSS2016;
+tables CHCCOPD1;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+proc surveyfreq data = location.BRFSS2016;
+tables CVDSTRK3;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;
+
+
+proc surveyfreq data = location.BRFSS2016;
+tables diabetes;
+*format COPD COPDform.;
+weight _LLCPWT;
+*strata _ststr;
+*cluster _psu;
+run;

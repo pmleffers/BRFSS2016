@@ -222,9 +222,7 @@ WEIGHT _LLCPWT;
 RUN;
 
 ***************************************************************************;
-
-
-*This works!;
+*Testing;
 PROC LOGISTIC data=location.BRFSS2016; *weight _LLCPWT; 
 *      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
 model sleeptime(event='1')=
@@ -236,7 +234,7 @@ ods output ParameterEstimates=Estimates;
 run;
 
 
-
+*More Testing;
 
 PROC SURVEYLOGISTIC data=location.BRFSS2016; weight _LLCPWT; 
 *      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
@@ -256,7 +254,7 @@ run;
 
 
 
-
+*Full Saturated Model;
 PROC SURVEYLOGISTIC data=location.BRFSS2016; weight _LLCPWT; 
 *      physical activit     child count     age groups       menthal health      binge drinking      tobacco smoking  BMI Categories;
 class physact(ref='1') Child2More(ref='1') FiftyFiveMore(ref='0') BinMentHlth(ref='0') BingeDrnk(ref='0') TobSmoke(ref='0') BMIWeightCats(ref='0') COPDCats(ref='2') StrokeCats(ref='2') diabCats(ref='0')/param=ref;
@@ -302,180 +300,4 @@ run;
 
 
 
-ods graphics on;
-PROC SURVEYREG data= location.BRFSS2016 ;
-class sleeptime;
-model SLEPTIM1=_AGEG5YR /solution;
-WEIGHT _LLCPWT;
-*class;
-ods output ParameterEstimates=Estimates;
-run;
-ods graphics off;
 
-*Create Plot;
-ods graphics on;
-title1 'Age Groupings by Sleep time';
-title2 'Compare Domain Statistics';
-ods graphics / antialias=on antialiasmax=486400;
-ods listing gpath="C:\Users\Caitlin\Desktop\BRFSS DATA\data\2016";
-proc sgplot data=location.BRFSS2016 ;
-*scatter x=WEIGHT2 y=_AGEG5YR;
-scatter x=_AGEG5YR y=WEIGHT2;
-run;
-ods graphics off;
-
-
-proc format;
-value ECIGform
-1 = 'Not currently using E-cigarettes'
-2 = 'Current E-cigarette user'
-9 = 'Don’t know/Refused/Missing';
-value MENTform
-1 = 'Zero days when mental health not good'
-2 = '1-13 days when mental health not good'
-3 = '14+ days when mental health not good'
-9 = 'Don’t know/Refused/Missing';
-value COPDform
-1 = 'Has COPD'
-2 = 'Does Not Have COPD';
-value DIABform
-1 = 'Has DIABETES'
-0 = 'Does Not Have DIABETES';
-value SLEEPform
-1 = '+ 6 hours sleep'
-0 = '<= 6 hours sleep'
-9 = 'Refused/Missing';
-value  BPHIGHform
-1 = 'Not diagnosed BP high'
-2 = 'Diagnosed BP high'
-9 = 'Other';
-value  BCHIGHform
-1 = 'Not diagnosed BChol high'
-2 = 'Diagnosed BChol high'
-9 = 'Other';
-value  ASTHMAform
-1 = 'Not diagnosed asthma'
-2 = 'Diagnosed Asthma'
-9 = 'Other';
-value  RACEform
-1 = 'White only, NonHispanic'
-2 = 'Black only, NonHispanic'
-3 = 'Hispanic'
-4 = 'Other race only,Non-Hispanic'
-5 = 'Multiracial, NonHispanic';
-value  BMIform
-1 = 'Underweight'
-2 = 'Normal Weight'
-3 = 'Overweight'
-4 = 'Obese';
-value  SMOKEform
-1 = 'smokes every day'
-2 = 'smokes some days'
-3 = 'Former smoker'
-4 = 'Never smoked'
-9 = 'Don’t know';
-value  ALCform
-1 = 'No bing drinking'
-2 = 'yes binge drinking'
-9 = 'Don’t know';
-value  EXCform
-1 = 'Had physical activity or exercise'
-2 = 'No physical activity '
-9 = 'Don’t know';
-
-run;
-
-
-PROC SURVEYFREQ data = location.BRFSS2016;
-*CLUSTER _PSU ;
-*STRATA _STSTR ;
-TABLES SLEPTIM1;
-WEIGHT _LLCPWT ;
-RUN;
-
-PROC SURVEYFREQ data = location.BRFSS2016;
-*CLUSTER _PSU ;
-*STRATA _STSTR ;
-TABLES sleeptime;
-FORMAT sleeptime SLEEPform.;
-WEIGHT _LLCPWT ;
-RUN;
-
-PROC SURVEYFREQ data = location.BRFSS2016;
-*CLUSTER _PSU ;
-*STRATA _STSTR ;
-TABLES _TOTINDA;
-WEIGHT _LLCPWT ;
-RUN;
-
-PROC SURVEYFREQ data = location.BRFSS2016;
-*CLUSTER _PSU ;
-*STRATA _STSTR ;
-TABLES _CHLDCNT;
-WEIGHT _LLCPWT ;
-RUN;
-
-PROC SURVEYFREQ data = location.BRFSS2016;
-*CLUSTER _PSU ;
-*STRATA _STSTR ;
-TABLES _AGEG5YR;
-WEIGHT _LLCPWT ;
-RUN;
-
-
-proc surveyfreq data = location.BRFSS2016;
-tables _MENT14D;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-proc surveyfreq data = location.BRFSS2016;
-tables _RFBING5;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-proc surveyfreq data = location.BRFSS2016;
-tables _RFSMOK3;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-proc surveyfreq data = location.BRFSS2016;
-tables _BMI5CAT;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-proc surveyfreq data = location.BRFSS2016;
-tables CHCCOPD1;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-proc surveyfreq data = location.BRFSS2016;
-tables CVDSTRK3;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
-
-
-proc surveyfreq data = location.BRFSS2016;
-tables diabetes;
-*format COPD COPDform.;
-weight _LLCPWT;
-*strata _ststr;
-*cluster _psu;
-run;
